@@ -222,8 +222,11 @@ const promotionPieces = [];
 // scale to match piece coordinate system, translate to board center.
 //   Rotation -90° around X:  (x,y,z) → (x, z, -y)
 //   Old board spans X: -9.68…9.50, Z: -10.36…8.96  (center ≈ -0.09, -0.70)
-//   New board half-width: 4.75  → scale = 9.59 / 4.75 ≈ 2.02
-const BOARD_SCALE     = (9.68 + 9.50) / 2 / 4.75;   // ≈ 2.019
+//   New board half-width: 4.75  → scale covers full 8 squares including margins
+//   Previous scale (9.59/4.75 ≈ 2.02) mapped piece centers to the board edge.
+//   Correct scale maps full 8-square span (8 steps) to board's 9.5-unit width:
+//     scale = 8 * avg_step / (2 * 4.75)  = 8 * 2.75 / 9.5 ≈ 2.316
+const BOARD_SCALE     = 8 * (GLB_XS + GLB_ZS) / 2 / (2 * 4.75);  // ≈ 2.316
 const BOARD_CENTER_X  = (GLB_X0 + GLB_X0 + 7 * GLB_XS) / 2;  // ≈ -0.09
 const BOARD_CENTER_Z  = (GLB_Z0 + GLB_Z0 + 7 * GLB_ZS) / 2;  // ≈ -0.70
 
@@ -231,9 +234,10 @@ function loadNewBoard() {
   return new Promise(resolve => {
     new GLTFLoader().load('./assets/chess_board.glb', gltf => {
       const root = gltf.scene;
-      // DO NOT add any rotation — the GLB node hierarchy already handles
-      // orientation (Sketchfab_model has Rx(-90°) baked in that lays board flat).
-      // Adding another rotation here doubled it and made the board vertical.
+      // The GLB has Rx(-90°) baked in (lays the board flat in XZ plane).
+      // Add Ry(+90°) to rotate the board orientation 90° to the right so
+      // the file/rank labels align with the piece coordinate system.
+      root.rotation.y = Math.PI / 2;
       root.scale.setScalar(BOARD_SCALE);
       // Top playing surface of board is at world y ≈ +0.505 (before position).
       // Shift down so pieces at y=0 sit on the board surface.
