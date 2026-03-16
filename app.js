@@ -226,7 +226,7 @@ const promotionPieces = [];
 
 
 
-const BOARD_SCALE = 2.2027; // exact: board square step 1.246 * S = GLB_XS 2.74
+const BOARD_SCALE = 2.6432; // verified exact: chess sq col 121-903 → pieces WX 9.50 to -9.68
 const BOARD_CENTER_X  = (GLB_X0 + GLB_X0 + 7 * GLB_XS) / 2;  // ≈ -0.09
 const BOARD_CENTER_Z  = (GLB_Z0 + GLB_Z0 + 7 * GLB_ZS) / 2;  // ≈ -0.70
 
