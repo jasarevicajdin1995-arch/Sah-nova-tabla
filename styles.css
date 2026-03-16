@@ -1,0 +1,405 @@
+:root {
+  --bg-1: #f7efd8;
+  --bg-2: #c79d63;
+  --panel: rgba(255, 248, 232, 0.92);
+  --ink: #2d2117;
+  --shadow: 0 12px 40px rgba(68, 35, 9, 0.22);
+  --board-bg: #1a0e06;
+  --header-height: 90px; /* approximate; used in JS-free height calcs */
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+button, canvas { touch-action: manipulation; }
+
+/* Lock page height — no body scroll. All scrolling happens inside .side-panel */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top, rgba(255, 240, 201, 0.92), transparent 36%),
+    linear-gradient(135deg, var(--bg-1), #edd4a2 48%, var(--bg-2));
+  overscroll-behavior: none;
+}
+button { font: inherit; cursor: pointer; }
+img    { max-width: 100%; display: block; }
+
+/* ═══════════════════════════════════════════════
+   APP SHELL — fills full viewport, flex column
+═══════════════════════════════════════════════ */
+.app-shell {
+  width: 100%;
+  height: 100svh;
+  max-height: 100svh;
+  padding: 16px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+/* ── HEADER ── */
+.hero {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.hero-text { flex: 1; min-width: 0; }
+.eyebrow {
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.68rem;
+  color: rgba(45, 33, 23, 0.60);
+}
+h1 { margin: 0; font-size: clamp(1.5rem, 3.5vw, 3rem); line-height: 1; }
+h1 span { display: block; font-size: clamp(0.75rem, 1.4vw, 1.1rem); color: rgba(45,33,23,0.60); margin-top: 4px; }
+.subtitle { display: none; } /* hidden by default — only shown on very tall screens */
+.controls {
+  display: flex; gap: 7px; flex-wrap: wrap; flex-shrink: 0; align-items: flex-start;
+}
+.controls button {
+  border: none; border-radius: 999px; padding: 9px 16px; min-height: 40px;
+  background: linear-gradient(135deg, #6d441d, #b88328);
+  color: #fff9ee; box-shadow: var(--shadow); font-size: 0.88rem;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s, opacity 0.12s;
+}
+.controls button:active { transform: scale(0.95); opacity: 0.88; }
+#fullscreen-btn    { background: linear-gradient(135deg, #2a4a2a, #4a7c3f); }
+#undo-btn          { background: linear-gradient(135deg, #3a2260, #7c3fa8); }
+#rotate-btn        { background: linear-gradient(135deg, #1a3a5a, #2e7ab8); }
+#finish-rotate-btn { background: linear-gradient(135deg, #1a4a1a, #3a8c3a); }
+
+/* ═══════════════════════════════════════════════
+   BOARD LAYOUT — fills remaining height
+═══════════════════════════════════════════════ */
+.board-layout {
+  flex: 1;
+  min-height: 0;    /* ← critical: lets flex child shrink below content size */
+  display: grid;
+  grid-template-columns: 1fr minmax(200px, 260px);
+  gap: 14px;
+  align-items: stretch;
+}
+
+/* ── BOARD PANEL ── */
+.board-panel {
+  min-height: 0;
+  background: var(--panel);
+  border: 1px solid rgba(95,55,24,0.13);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  padding: 8px 12px 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── CAPTURED SIDEBARS — overlaid on left/right edges of the board ── */
+.cap-sidebar {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 36px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 2px 8px;
+  gap: 2px;
+  background: rgba(12, 6, 2, 0.60);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  pointer-events: none;
+  overflow: hidden;
+}
+.cap-sidebar--left  { left: 0;  border-radius: 12px 0 0 12px; }
+.cap-sidebar--right { right: 0; border-radius: 0 12px 12px 0; }
+
+.cap-sidebar-label {
+  font-size: 0.44rem;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: rgba(255, 240, 200, 0.40);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-bottom: 4px;
+}
+.cap-sidebar-pieces {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
+  font-size: 1.3rem;
+  line-height: 1.15;
+  color: #fff8e8;
+  overflow: hidden;
+  flex: 1;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+}
+
+/* ── 3D CANVAS — fills all remaining board-panel space ── */
+.board-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--board-bg);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* No aspect-ratio — height is determined by flex layout */
+}
+#board-canvas {
+  width: 100%; height: 100%;
+  display: block; touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 12px;
+  background: transparent;
+  cursor: default;
+}
+.board-container.rotation-active #board-canvas { cursor: grab; }
+.board-container.rotation-active #board-canvas:active { cursor: grabbing; }
+
+/* ── BOARD ACTION BUTTONS ── */
+.board-actions {
+  position: absolute; bottom: 10px; left: 10px;
+  display: flex; gap: 6px; z-index: 10;
+}
+.board-action-btn {
+  border: none; border-radius: 999px;
+  padding: 7px 13px; min-height: 34px;
+  background: rgba(20,12,5,0.70); color: #fff9ee;
+  font-family: Georgia, serif; font-size: 0.82rem;
+  cursor: pointer;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.14s, transform 0.1s;
+}
+.board-action-btn:active { transform: scale(0.92); }
+#exit-fs-btn           { background: rgba(60,15,15,0.78); }
+#finish-rotate-overlay { background: rgba(15,50,15,0.78); }
+
+/* ── MATE BANNER ── */
+.mate-banner {
+  position: absolute; inset: 50% auto auto 50%;
+  transform: translate(-50%,-50%);
+  min-width: min(86%,340px); padding: 22px 28px; text-align: center;
+  border-radius: 18px; background: rgba(82,8,8,0.94); color: #fff5db;
+  font-size: clamp(1.6rem,6vw,3.2rem); font-weight: 700; letter-spacing: 0.08em;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.4); z-index: 10; pointer-events: none;
+}
+.hidden { display: none !important; }
+
+/* ── SIDE PANEL — fills same height as board panel, scrolls internally ── */
+.side-panel {
+  min-height: 0;
+  background: var(--panel);
+  border: 1px solid rgba(95,55,24,0.13);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+.status-card {
+  flex-shrink: 0;
+  border-radius: 14px; padding: 12px 14px;
+  background: rgba(255,252,245,0.72); border: 1px solid rgba(95,55,24,0.10);
+}
+.status-card h2 { margin: 0 0 7px; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(45,33,23,0.55); }
+.status-card p  { margin: 0; line-height: 1.5; font-size: 0.94rem; }
+
+/* ── DIFFICULTY ── */
+.diff-buttons { display: flex; gap: 6px; }
+.diff-btn {
+  flex: 1; border: 2px solid rgba(95,55,24,0.18);
+  background: rgba(255,252,245,0.5); color: var(--ink);
+  border-radius: 11px; padding: 8px 4px; min-height: 40px;
+  font-size: 0.77rem; -webkit-tap-highlight-color: transparent;
+  transition: background 0.14s, border-color 0.14s, transform 0.1s;
+  font-family: Georgia, serif;
+}
+.diff-btn:active { transform: scale(0.94); }
+.diff-btn.active {
+  background: linear-gradient(135deg, #6d441d, #b88328);
+  color: #fff9ee; border-color: transparent;
+  box-shadow: 0 2px 10px rgba(68,35,9,0.22);
+}
+
+/* ── MUSIC ── */
+.music-controls { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; }
+.music-controls button {
+  border: none; background: linear-gradient(135deg,#6d441d,#b88328); color: #fff9ee;
+  border-radius: 50%; width: 38px; height: 38px; min-width: 42px; min-height: 42px;
+  font-size: 0.85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(68,35,9,0.18); -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s;
+}
+.music-controls button:active { transform: scale(0.91); }
+.song-info { flex: 1; min-width: 0; text-align: center; }
+#song-name { display: block; font-size: 0.82rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+.music-state { display: block; font-size: 0.69rem; color: rgba(45,33,23,0.55); margin-top: 2px; }
+.music-toggle {
+  width: 100%; border: 1px solid rgba(95,55,24,0.22); background: rgba(255,252,245,0.6);
+  color: var(--ink); border-radius: 999px; padding: 8px 12px; min-height: 40px;
+  font-size: 0.84rem; -webkit-tap-highlight-color: transparent; transition: background 0.14s;
+}
+.music-hint { margin: 6px 0 0; font-size: 0.68rem; color: rgba(45,33,23,0.48); font-style: italic; }
+.music-hint code { font-family: monospace; background: rgba(0,0,0,0.07); padding: 1px 4px; border-radius: 3px; }
+
+/* ═══════════════════════════════════════════════
+   FULLSCREEN MODE
+═══════════════════════════════════════════════ */
+body.is-fullscreen .hero,
+body.is-fullscreen .side-panel { display: none !important; }
+body.is-fullscreen .app-shell { padding: 0; gap: 0; }
+body.is-fullscreen .board-layout {
+  gap: 0;
+  grid-template-columns: 1fr;   /* side panel is hidden — don't waste column space */
+  display: flex;                 /* flex is simpler than a 1-col grid here */
+}
+body.is-fullscreen .board-panel {
+  border-radius: 0; border: none; box-shadow: none;
+  background: var(--board-bg); padding: 0;
+}
+body.is-fullscreen .board-container { border-radius: 0; }
+body.is-fullscreen #board-canvas    { border-radius: 0; }
+body.is-fullscreen .cap-sidebar--left  { border-radius: 0; }
+body.is-fullscreen .cap-sidebar--right { border-radius: 0; }
+
+/* ═══════════════════════════════════════════════
+   PORTRAIT MOBILE  (≤ 760px portrait)
+   Board fills most of screen; side panel is compact
+   horizontal strip below, controls folded
+═══════════════════════════════════════════════ */
+@media (max-width: 760px) and (orientation: portrait) {
+  .app-shell { padding: 8px 8px 6px; gap: 6px; }
+
+  /* Compact header: one line */
+  .hero { flex-wrap: nowrap; align-items: center; gap: 8px; }
+  .eyebrow, .subtitle { display: none; }
+  h1 { font-size: 1.25rem; }
+  h1 span { display: none; }
+  .controls { gap: 5px; }
+  .controls button { padding: 7px 11px; font-size: 0.76rem; min-height: 36px; }
+
+  /* Board layout: stack vertically, board gets most space */
+  .board-layout {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    /* Force the layout to be a flex column so board can flex-grow */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .board-panel {
+    flex: 1;        /* board panel grows to fill all remaining height */
+    min-height: 0;
+    padding: 5px 7px 6px;
+    border-radius: 14px;
+  }
+
+  .board-container { border-radius: 8px; }
+  #board-canvas    { border-radius: 8px; }
+
+  /* Smaller sidebar in portrait */
+  .cap-sidebar { width: 30px; }
+  .cap-sidebar-pieces { font-size: 1.1rem; }
+
+  /* Side panel: compact horizontal strip, scrollable */
+  .side-panel {
+    flex-shrink: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-radius: 12px;
+    padding: 6px 8px;
+    gap: 5px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+
+  /* Each card: small */
+  .status-card {
+    flex: 1 1 120px;
+    padding: 6px 9px;
+    border-radius: 10px;
+    min-width: 0;
+  }
+  .status-card h2 { font-size: 0.60rem; margin-bottom: 3px; }
+  .status-card p  { font-size: 0.76rem; line-height: 1.3; }
+
+  /* Difficulty: full width */
+  .difficulty-card { flex: 1 1 100%; }
+  .diff-btn { font-size: 0.68rem; padding: 5px 2px; min-height: 30px; }
+
+  /* Music: compact single row — prev/name/next + toggle button */
+  .music-card { flex: 1 1 100%; }
+  .music-controls { margin-bottom: 5px; gap: 7px; }
+  .music-controls button { width: 32px; height: 32px; min-width: 36px; min-height: 36px; font-size: 0.78rem; }
+  #song-name { font-size: 0.76rem; }
+  .music-state { font-size: 0.62rem; }
+  .music-toggle { padding: 5px 10px; min-height: 32px; font-size: 0.76rem; }
+  .music-hint { display: none; }
+}
+
+/* Very small phones */
+@media (max-width: 390px) and (orientation: portrait) {
+  .controls button { padding: 6px 8px; font-size: 0.72rem; min-height: 32px; }
+  h1 { font-size: 1.1rem; }
+}
+
+/* ═══════════════════════════════════════════════
+   LANDSCAPE PHONE (max-height: 520px)
+═══════════════════════════════════════════════ */
+@media (max-height: 520px) and (orientation: landscape) {
+  .app-shell { padding: 0; gap: 0; }
+  .hero { display: none; }
+
+  .board-layout {
+    display: flex; flex-direction: row;
+    align-items: stretch; gap: 0;
+  }
+
+  .board-panel {
+    flex: 1; padding: 0; border-radius: 0; border: none;
+    box-shadow: none; background: var(--board-bg);
+    gap: 0; min-width: 0;
+  }
+  .board-container { border-radius: 0; }
+  #board-canvas    { border-radius: 0; }
+
+  .captured-row {
+    padding: 2px 8px; height: 18px;
+    background: rgba(0,0,0,0.65);
+  }
+  .cap-label  { color: rgba(255,240,200,0.55); }
+  .cap-pieces { color: #fff5db; font-size: 0.85rem; }
+
+  .side-panel {
+    width: 165px; flex-shrink: 0;
+    border-radius: 0; border-left: 1px solid rgba(95,55,24,0.2);
+    overflow-y: auto; padding: 7px;
+    display: flex; flex-direction: column; gap: 7px;
+  }
+  .status-card { padding: 7px 9px; border-radius: 9px; }
+  .status-card h2 { font-size: 0.63rem; margin-bottom: 3px; }
+  .status-card p  { font-size: 0.77rem; }
+  .diff-btn { font-size: 0.66rem; padding: 5px 2px; min-height: 32px; }
+  .music-card { display: none; }
+}
