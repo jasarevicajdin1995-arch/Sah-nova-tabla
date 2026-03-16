@@ -178,10 +178,10 @@ rim.position.set(0, 10, -30);  scene.add(rim);
 // ═══════════════════════════════════════════════════════════════
 //  GLB COORDINATE SYSTEM
 // ═══════════════════════════════════════════════════════════════
-const GLB_X0 = -9.68;
-const GLB_XS =  2.74;
-const GLB_Z0 = -10.36;
-const GLB_ZS =  2.76;
+const GLB_X0 = -9.5361; // scaled 1.5% inward
+const GLB_XS =  2.6989;
+const GLB_Z0 = -10.2151;
+const GLB_ZS =  2.7186;
 const GLB_Y  =  0.0;
 
 function glbPos(sq) {
@@ -431,7 +431,7 @@ function updateCapturedDisplay() {
 //  HIGHLIGHTS
 // ═══════════════════════════════════════════════════════════════
 const hlMeshes = [];
-const SQ_SIZE  = 2.74;   // matches board square size at BOARD_SCALE 2.2027
+const SQ_SIZE  = 2.6989; // = GLB_XS
 const HL_Y     = 0.5;
 
 function clearHighlights() { hlMeshes.forEach(m => scene.remove(m)); hlMeshes.length = 0; }
