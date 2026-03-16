@@ -226,7 +226,7 @@ const promotionPieces = [];
 
 
 
-const BOARD_SCALE = 2.1741; // chess squares ±4.532 local → piece span ±9.66 world, +2% margin
+const BOARD_SCALE = 2.2027; // step-matched: file step 1.246×S=2.74, rank step 1.251×S=2.76
 const BOARD_CENTER_X  = (GLB_X0 + GLB_X0 + 7 * GLB_XS) / 2;  // ≈ -0.09
 const BOARD_CENTER_Z  = (GLB_Z0 + GLB_Z0 + 7 * GLB_ZS) / 2;  // ≈ -0.70
 
