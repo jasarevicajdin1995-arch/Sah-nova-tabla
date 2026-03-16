@@ -226,7 +226,7 @@ const promotionPieces = [];
 
 
 
-const BOARD_SCALE = 2.6432; // 2.6170 * 1.01
+const BOARD_SCALE = 2.2027; // exact: board square step 1.246 * S = GLB_XS 2.74
 const BOARD_CENTER_X  = (GLB_X0 + GLB_X0 + 7 * GLB_XS) / 2;  // ≈ -0.09
 const BOARD_CENTER_Z  = (GLB_Z0 + GLB_Z0 + 7 * GLB_ZS) / 2;  // ≈ -0.70
 
@@ -431,7 +431,7 @@ function updateCapturedDisplay() {
 //  HIGHLIGHTS
 // ═══════════════════════════════════════════════════════════════
 const hlMeshes = [];
-const SQ_SIZE  = 2.6;
+const SQ_SIZE  = 2.74;   // matches board square size at BOARD_SCALE 2.2027
 const HL_Y     = 0.5;
 
 function clearHighlights() { hlMeshes.forEach(m => scene.remove(m)); hlMeshes.length = 0; }
