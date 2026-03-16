@@ -226,7 +226,7 @@ const promotionPieces = [];
 
 
 
-const BOARD_SCALE     = (9.68 + 9.50) / 2 / 4.75;   // = 19.18/9.5 = 2.019 (exact piece-to-UV fit)
+const BOARD_SCALE = 2.1741; // chess squares ±4.532 local → piece span ±9.66 world, +2% margin
 const BOARD_CENTER_X  = (GLB_X0 + GLB_X0 + 7 * GLB_XS) / 2;  // ≈ -0.09
 const BOARD_CENTER_Z  = (GLB_Z0 + GLB_Z0 + 7 * GLB_ZS) / 2;  // ≈ -0.70
 
@@ -241,7 +241,7 @@ function loadNewBoard() {
       root.scale.setScalar(BOARD_SCALE);
       // Top playing surface of board is at world y ≈ +0.505 (before position).
       // Shift down so pieces at y=0 sit on the board surface.
-      root.position.set(BOARD_CENTER_X, -0.50, BOARD_CENTER_Z);
+      root.position.set(BOARD_CENTER_X, -BOARD_SCALE * 0.25, BOARD_CENTER_Z);
       root.traverse(obj => {
         if (!obj.isMesh) return;
         obj.castShadow    = false;
