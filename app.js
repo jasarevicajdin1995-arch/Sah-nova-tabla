@@ -222,14 +222,13 @@ const promotionPieces = [];
 // scale to match piece coordinate system, translate to board center.
 //   Rotation -90° around X:  (x,y,z) → (x, z, -y)
 //   Old board spans X: -9.68…9.50, Z: -10.36…8.96  (center ≈ -0.09, -0.70)
-//   New board half-width: 4.75  → scale covers full 8 squares including margins
-//   Previous scale (9.59/4.75 ≈ 2.02) mapped piece centers to the board edge.
-//   Correct scale maps full 8-square span (8 steps) to board's 9.5-unit width:
-//     scale = 8 * avg_step / (2 * 4.75)  = 8 * 2.75 / 9.5 ≈ 2.316
-const BOARD_SCALE     = 7 * GLB_ZS / 6.494;                    // ≈ 2.975
+
+
+
+
+const BOARD_SCALE     = (9.68 + 9.50) / 2 / 4.75;   // = 19.18/9.5 = 2.019 (exact piece-to-UV fit)
 const BOARD_CENTER_X  = (GLB_X0 + GLB_X0 + 7 * GLB_XS) / 2;  // ≈ -0.09
 const BOARD_CENTER_Z  = (GLB_Z0 + GLB_Z0 + 7 * GLB_ZS) / 2;  // ≈ -0.70
-const BOARD_POS_Z     = BOARD_CENTER_Z + BOARD_SCALE;          // ≈ +2.275 (playing-area lx offset)
 
 function loadNewBoard() {
   return new Promise(resolve => {
@@ -242,7 +241,7 @@ function loadNewBoard() {
       root.scale.setScalar(BOARD_SCALE);
       // Top playing surface of board is at world y ≈ +0.505 (before position).
       // Shift down so pieces at y=0 sit on the board surface.
-      root.position.set(BOARD_CENTER_X, -BOARD_SCALE * 0.25, BOARD_POS_Z);
+      root.position.set(BOARD_CENTER_X, -0.50, BOARD_CENTER_Z);
       root.traverse(obj => {
         if (!obj.isMesh) return;
         obj.castShadow    = false;
