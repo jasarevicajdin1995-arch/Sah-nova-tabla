@@ -226,7 +226,7 @@ const promotionPieces = [];
 
 
 
-const BOARD_SCALE = 2.4009; // 2.2027 * 1.09
+const BOARD_SCALE = 2.6170; // 2.4009 * 1.09
 const BOARD_CENTER_X  = (GLB_X0 + GLB_X0 + 7 * GLB_XS) / 2;  // ≈ -0.09
 const BOARD_CENTER_Z  = (GLB_Z0 + GLB_Z0 + 7 * GLB_ZS) / 2;  // ≈ -0.70
 
