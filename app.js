@@ -178,10 +178,10 @@ rim.position.set(0, 10, -30);  scene.add(rim);
 // ═══════════════════════════════════════════════════════════════
 //  GLB COORDINATE SYSTEM
 // ═══════════════════════════════════════════════════════════════
-const GLB_X0 = -8.9769; // 7.5% total inward
-const GLB_XS =  2.5391;
-const GLB_Z0 = -9.6518;
-const GLB_ZS =  2.5576;
+const GLB_X0 = -9.68;
+const GLB_XS =  2.74;
+const GLB_Z0 = -10.36;
+const GLB_ZS =  2.76;
 const GLB_Y  =  0.0;
 
 function glbPos(sq) {
@@ -226,7 +226,7 @@ const promotionPieces = [];
 
 
 
-const BOARD_SCALE = 2.6432; // verified exact: chess sq col 121-903 → pieces WX 9.50 to -9.68
+const BOARD_SCALE = 2.7489; // 2.6432 * 1.04
 const BOARD_CENTER_X  = (GLB_X0 + GLB_X0 + 7 * GLB_XS) / 2;  // ≈ -0.09
 const BOARD_CENTER_Z  = (GLB_Z0 + GLB_Z0 + 7 * GLB_ZS) / 2;  // ≈ -0.70
 
@@ -431,7 +431,7 @@ function updateCapturedDisplay() {
 //  HIGHLIGHTS
 // ═══════════════════════════════════════════════════════════════
 const hlMeshes = [];
-const SQ_SIZE  = 2.5391; // = GLB_XS
+const SQ_SIZE  = 2.74;
 const HL_Y     = 0.5;
 
 function clearHighlights() { hlMeshes.forEach(m => scene.remove(m)); hlMeshes.length = 0; }
